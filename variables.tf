@@ -22,3 +22,49 @@ variable "location" {
 variable "dbserversku" {
   type = string
 }
+
+
+variable "connectwebappname" {
+  type = string
+}
+variable "apiwebappname" {
+  type = string
+}
+
+
+variable "identitywebappname" {
+  type = string
+}
+variable "storageaccountname" {
+  type = string
+}
+
+variable "storageaccounttier" {
+  type = string
+}
+
+variable "appsvcplanname" {
+  type = string
+}
+
+variable "aksname" {
+  type = string
+}
+
+
+variable "dbservername" {
+  type = string
+}
+
+variable "administrator_login" {
+  type = string
+}
+
+variable "administrator_login_password" {
+  type = string
+}
+
+
+variable "dbname" {
+  type = string
+}
