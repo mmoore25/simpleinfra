@@ -2,6 +2,34 @@
 
 
 
+Basic requirements to run this terraform script manually
+
+The listed subnets need to exist and have subnet delegation set to ***"Microsoft.Databricks/workspaces"***  
+The NSG need to exist. Rules will be added and have the RITM appended to the name.  
+
+| Variable 	| Value 	| Comment 	|
+|---	|---	|---	|
+| **ritm** 	| "RITM3100023" 	| # This RITM name will be appended to the NSG rules, please duplicate RITM in **tag** list. 	|
+| **mgmt_subnet_name** 	| "VIM-SubnetSample01" 	| # Databricks mgmt subnet name (PUBLIC Subnet) provided by NetEng 	|
+|  	|  	|  	|
+| **cluster_subnet_name** 	| "VIM-SubnetSample02" 	| # Databricks cluster subnet name (PRIVATE Subnet) provided by NetEng 	|
+|  	|  	|  	|
+| **Networksecuritygrpname** 	| "DatabricksGeneral01-NSG" 	| # NSG Name where new rules for databricks 	|
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #############################################################################
 # NETWORK 
 #############################################################################
