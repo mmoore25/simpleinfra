@@ -21,7 +21,8 @@ provider "azurerm" {
 #############################################################################
 resource "azurerm_resource_group" "mainrg" {
   name     = "mainrg"
-  location = "East US"
+  location = var.location
+  tags     = var.tags
 }
 
 #############################################################################
@@ -68,16 +69,6 @@ resource "azurerm_app_service" "connectUI" {
     always_on = true
   }
 
-  app_settings = {
-    "SOME_KEY" = "some-value"
-  }
-
-  connection_string {
-    name  = "Database"
-    type  = "SQLServer"
-    value = "Server=some-server.mydomain.com;Integrated Security=SSPI"
-  }
-  
   tags = var.tags
 } 
 
