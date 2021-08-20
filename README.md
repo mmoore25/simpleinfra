@@ -1,154 +1,19 @@
 # simpleinfra
 
+Simple terraform scripting for standing up resources
+Basic requirements to run this terraform script manually.
+Terraform and AZ CLI are required
 
 
-Basic requirements to run this terraform script manually
-
-The listed subnets need to exist and have subnet delegation set to ***"Microsoft.Databricks/workspaces"***  
-The NSG need to exist. Rules will be added and have the RITM appended to the name.  
-
-| Variable 	| Value 	| Comment 	|
-|---	|---	|---	|
-| **ritm** 	| "RITM3100023" 	| # This RITM name will be appended to the NSG rules, please duplicate RITM in **tag** list. 	|
-| **mgmt_subnet_name** 	| "VIM-SubnetSample01" 	| # Databricks mgmt subnet name (PUBLIC Subnet) provided by NetEng 	|
-|  	|  	|  	|
-| **cluster_subnet_name** 	| "VIM-SubnetSample02" 	| # Databricks cluster subnet name (PRIVATE Subnet) provided by NetEng 	|
-|  	|  	|  	|
-| **Networksecuritygrpname** 	| "DatabricksGeneral01-NSG" 	| # NSG Name where new rules for databricks 	|
+#** REQUIRED STEPS**
+1. Clone this repo
+2. Terraform init
+3. Az login ( contributor credentials )
+4. Modify either staging.tfvars or production.tfvars 
+5. ./standup.sh  staging                  # use the name of the previously modified tfvars files
 
 
+# to destroy those resources 
+./teardown.sh staging
 
-
-
-
-
-
-
-
-
-
-
-
-
-#############################################################################
-# NETWORK 
-#############################################################################
-resource "azurerm_network_security_rule" "rule600" {
-  resource_group_name        = var.corenetwork_RG
-  network_security_group_name= var.networksecuritygrpname
-  name                       = "databricks-worker-to-eventhub-${var.ritm}"
-  priority                   = 600
-  direction                  = "Outbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "9093"
-  source_address_prefix      = "VirtualNetwork"
-  destination_address_prefix = "EventHub"
-}
-
-resource "azurerm_network_security_rule" "rule001" {
-  resource_group_name        = var.corenetwork_RG
-  network_security_group_name= var.networksecuritygrpname
-  name                       = "databricks-worker-to-worker-inbound-${var.ritm}"
-  priority                   = 100
-  direction                  = "Inbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "*"
-  source_address_prefix      = "VirtualNetwork"
-  destination_address_prefix = "*"
- }
-
-resource "azurerm_network_security_rule" "rule100" {
-  resource_group_name        = var.corenetwork_RG
-  network_security_group_name= var.networksecuritygrpname
-  name                       = "databricks-worker-to-databricks-webapp-${var.ritm}"
-  priority                   = 100
-  direction                  = "Outbound"
-  access                     = "Allow"
-  protocol                   = "TCP"
-  source_port_range          = "*"
-  destination_port_range     = "443"
-  source_address_prefix      = "VirtualNetwork"
-  destination_address_prefix = "AzureDatabricks"
-}
-
-resource "azurerm_network_security_rule" "rule200" {
-  resource_group_name        = var.corenetwork_RG
-  network_security_group_name= var.networksecuritygrpname
-  name                       = "databricks-worker-to-sql-${var.ritm}"
-  priority                   = 200
-  direction                  = "Outbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "3306"
-  source_address_prefix      = "VirtualNetwork"
-  destination_address_prefix = "Sql"
-}
-
-resource "azurerm_network_security_rule" "rule300" {
-  resource_group_name        = var.corenetwork_RG
-  network_security_group_name= var.networksecuritygrpname
-  name                       = "databricks-worker-to-storage-${var.ritm}"
-  priority                   = 300
-  direction                  = "Outbound"
-  access                     = "Allow"
-  protocol                   = "Tcp"
-  source_port_range          = "*"
-  destination_port_range     = "443"
-  source_address_prefix      = "VirtualNetwork"
-  destination_address_prefix = "Storage"
-}
-
-resource "azurerm_network_security_rule" "rule400" {
-  resource_group_name        = var.corenetwork_RG
-  network_security_group_name= var.networksecuritygrpname
-  name                       = "databricks-worker-to-worker-outbound-${var.ritm}"
-  priority                   = 400
-  direction                  = "Outbound"
-  access                     = "Allow"
-  protocol                   = "*"
-  source_port_range          = "*"
-  destination_port_range     = "3306"
-  source_address_prefix      = "VirtualNetwork"
-  destination_address_prefix = "VirtualNetwork"
-}
-
-
-
-data "azurerm_virtual_network" "CoreNetwork" {
-  name                = var.corenetwork_name
-  resource_group_name = var.corenetwork_RG
-}
-
-data "azurerm_network_security_group" "Databricks-NSG" {
-  name                = var.networksecuritygrpname
-  resource_group_name = var.corenetwork_RG
-}
-
-data "azurerm_subnet" "Databricks-Public-Subnet" {
-  name                  = var.mgmt_subnet_name
-  resource_group_name   = var.corenetwork_RG
-  virtual_network_name  = var.corenetwork_name 
-}
-
-data "azurerm_subnet" "Databricks-Private-Subnet" {
-  name                  = var.cluster_subnet_name
-  resource_group_name   = var.corenetwork_RG
-  virtual_network_name  = var.corenetwork_name
-}
-
-
-resource "azurerm_subnet_network_security_group_association" "Databricks_Private_Subnet_Association" {
-  subnet_id                 = data.azurerm_subnet.Databricks-Private-Subnet.id
-  network_security_group_id = data.azurerm_network_security_group.Databricks-NSG.id
-}
-
-resource "azurerm_subnet_network_security_group_association" "Databricks_Public_Subnet_Association" {
-  subnet_id                 = data.azurerm_subnet.Databricks-Public-Subnet.id
-  network_security_group_id = data.azurerm_network_security_group.Databricks-NSG.id
-}
 
