@@ -101,6 +101,13 @@ resource "azurerm_app_service" "connectUI" {
   resource_group_name = azurerm_resource_group.mainrg.name
   app_service_plan_id = azurerm_app_service_plan.main-asp.id
 
+  
+  app_settings = {
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.connectuiInsights.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.connectuiInsights.connection_string
+  }
+
+
   site_config {
     dotnet_framework_version = "v5.0"
     always_on = true
@@ -132,15 +139,20 @@ resource "azurerm_app_service" "API" {
     always_on = true
   }
 
+
+  identity {
+    type = "SystemAssigned"
+  }
   app_settings = {
-    "SOME_KEY" = "some-value"
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.apiInsights.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.apiInsights.connection_string
   }
 
   connection_string {
     name  = "Database"
     type  = "SQLServer"
     value = "Server=some-server.mydomain.com;Integrated Security=SSPI"
-  }
+  }  
   
   tags = var.tags
 } 
@@ -154,6 +166,7 @@ resource "azurerm_application_insights" "apiInsights" {
   tags = var.tags
 }
 
+
 #############################################################################
 # Create the Identity Web App
 #############################################################################
@@ -164,14 +177,20 @@ resource "azurerm_app_service" "Identity" {
   app_service_plan_id = azurerm_app_service_plan.main-asp.id
   depends_on          = [ azurerm_postgresql_database.db ]
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   site_config {
     dotnet_framework_version = "v5.0"
     always_on = true
   }
 
   app_settings = {
-    "SOME_KEY" = "some-value"
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.identityapiInsights.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.identityapiInsights.connection_string
   }
+ 
 
   connection_string {
     name  = "Database"
@@ -209,6 +228,7 @@ resource "azurerm_postgresql_server" "dbserver" {
   administrator_login          = var.administrator_login
   administrator_login_password = var.administrator_login_password
   version                      = "11"
+  public_network_access_enabled= true
   ssl_enforcement_enabled      = true
   ssl_minimal_tls_version_enforced = "TLS1_2"
   
