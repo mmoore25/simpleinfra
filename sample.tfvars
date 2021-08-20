@@ -26,8 +26,8 @@ tags                        = { SupportGroup = "mmoore25@gmail.com", Environment
 #############################################################################
 dbserversku                 = "GP_Gen5_2"             # Database SKU size, Standard is needed for VNet integration
 dbservername                = "psl-springpath"
-administrator_login         = "psqladminun"
-administrator_login_password= "H@Sh1CoR3!"
+administrator_login         = "psklqladminun"
+administrator_login_password= "H@Sh1CoR3lksdw3r!"
 dbname                      = "DB-springpath"
 
 #############################################################################
