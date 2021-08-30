@@ -228,8 +228,8 @@ resource "azurerm_app_service" "Admin" {
     type = "SystemAssigned"
   }
   app_settings = {
-    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.apiInsights.instrumentation_key
-    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.apiInsights.connection_string
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.adminInsights.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.adimInsights.connection_string
   }
 
   connection_string {
@@ -241,7 +241,7 @@ resource "azurerm_app_service" "Admin" {
   tags = var.tags
 } 
 
-resource "azurerm_application_insights" "apiInsights" {
+resource "azurerm_application_insights" "adminInsights" {
   name                = "${var.adminwebappname}-${var.basename}"
   location            = azurerm_resource_group.mainrg.location
   resource_group_name = azurerm_resource_group.mainrg.name
