@@ -32,7 +32,6 @@ resource "azurerm_resource_group" "mainrg" {
 data "azurerm_client_config" "current" {}
 
 
-
 resource "azurerm_key_vault" "akv" {
   name                        = "${var.aksname}-${var.basename}"
   location                    = var.location
@@ -62,6 +61,7 @@ resource "azurerm_key_vault" "akv" {
   }
 }
 
+
 #############################################################################
 # Diagnostic Storage Account
 #############################################################################
@@ -74,6 +74,7 @@ resource "azurerm_storage_account" "diagstorage" {
 
   tags = var.tags
 }
+
 
 #############################################################################
 # Create the App Service Plan
@@ -228,8 +229,8 @@ resource "azurerm_app_service" "Admin" {
     type = "SystemAssigned"
   }
   app_settings = {
-    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.apiInsights.instrumentation_key
-    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.apiInsights.connection_string
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.adminInsights.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.adminInsights.connection_string
   }
 
   connection_string {
@@ -241,7 +242,7 @@ resource "azurerm_app_service" "Admin" {
   tags = var.tags
 } 
 
-resource "azurerm_application_insights" "apiInsights" {
+resource "azurerm_application_insights" "adminInsights" {
   name                = "${var.adminwebappname}-${var.basename}"
   location            = azurerm_resource_group.mainrg.location
   resource_group_name = azurerm_resource_group.mainrg.name
