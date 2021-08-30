@@ -229,7 +229,7 @@ resource "azurerm_app_service" "Admin" {
   }
   app_settings = {
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.adminInsights.instrumentation_key
-    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.adimInsights.connection_string
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.adminInsights.connection_string
   }
 
   connection_string {
