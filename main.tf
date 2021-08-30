@@ -209,6 +209,49 @@ resource "azurerm_application_insights" "identityapiInsights" {
   tags = var.tags
 }
 
+#############################################################################
+# Create the Admin Web App  -- comment out if not needed
+#############################################################################
+resource "azurerm_app_service" "Admin" {
+  name                = "${var.adminwebappname}-${var.basename}"
+  location            = azurerm_resource_group.mainrg.location
+  resource_group_name = azurerm_resource_group.mainrg.name
+  app_service_plan_id = azurerm_app_service_plan.main-asp.id
+
+  site_config {
+    dotnet_framework_version = "v5.0"
+    always_on = true
+  }
+
+
+  identity {
+    type = "SystemAssigned"
+  }
+  app_settings = {
+    APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.apiInsights.instrumentation_key
+    APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.apiInsights.connection_string
+  }
+
+  connection_string {
+    name  = "Database"
+    type  = "SQLServer"
+    value = "Server=some-server.mydomain.com;Integrated Security=SSPI"
+  }  
+  
+  tags = var.tags
+} 
+
+resource "azurerm_application_insights" "apiInsights" {
+  name                = "${var.adminwebappname}-${var.basename}"
+  location            = azurerm_resource_group.mainrg.location
+  resource_group_name = azurerm_resource_group.mainrg.name
+  application_type    = "web"
+  
+  tags = var.tags
+}
+
+
+
 
 #############################################################################
 # add the Postgresql server
