@@ -32,6 +32,10 @@ variable "apiwebappname" {
 }
 
 
+variable "adminwebappname" {
+  type = string
+}
+
 variable "identitywebappname" {
   type = string
 }
