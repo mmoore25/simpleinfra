@@ -72,3 +72,26 @@ variable "administrator_login_password" {
 variable "dbname" {
   type = string
 }
+
+variable "dnszonename" {
+  type = string  
+  default = "springerspaniel34rt.net"
+}
+
+variable "dnszonergname" {
+  type = string
+  default = "dns-rg"
+}
+
+variable "tier"{
+  type = string
+  default = "Standard"
+}
+
+variable "size" {
+  type = string
+  default = "S1"
+}
+    
+
+

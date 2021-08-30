@@ -26,12 +26,27 @@ resource "azurerm_resource_group" "mainrg" {
 }
 
 #############################################################################
+# User System Assigned Identity
+#############################################################################
+locals {
+  timestamp = "${timestamp()}"
+  timestamp_sanitized = "${replace("${local.timestamp}", "/[-| |T|Z|:]/", "")}"
+
+}
+
+resource "azurerm_user_assigned_identity" "uai" {
+  resource_group_name = azurerm_resource_group.mainrg.name
+  location            = azurerm_resource_group.mainrg.location
+
+  name = "MID-springpath-${var.basename}"
+  tags = var.tags
+}
+
+#############################################################################
 # Azure Key vault creation
 #############################################################################
 
 data "azurerm_client_config" "current" {}
-
-
 
 resource "azurerm_key_vault" "akv" {
   name                        = "${var.aksname}-${var.basename}"
@@ -62,6 +77,12 @@ resource "azurerm_key_vault" "akv" {
   }
 }
 
+# resource "azurerm_role_assignment" "uai_akv" {
+#   scope                = azurerm_key_vault.akv.id
+#   role_definition_name = "Reader"
+#   principal_id         = azurerm_user_assigned_identity.uai.id
+# }
+
 #############################################################################
 # Diagnostic Storage Account
 #############################################################################
@@ -84,8 +105,8 @@ resource "azurerm_app_service_plan" "main-asp" {
   resource_group_name = azurerm_resource_group.mainrg.name
   kind = "Windows"
   sku {
-    tier = "Standard"
-    size = "S1"
+    tier = var.tier
+    size = var.size
   }
   
   tags = var.tags
@@ -141,8 +162,10 @@ resource "azurerm_app_service" "API" {
 
 
   identity {
-    type = "SystemAssigned"
+    type = "UserAssigned"
+    identity_ids = [ azurerm_user_assigned_identity.uai.id ]
   }
+
   app_settings = {
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.apiInsights.instrumentation_key
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.apiInsights.connection_string
@@ -178,8 +201,10 @@ resource "azurerm_app_service" "Identity" {
   depends_on          = [ azurerm_postgresql_database.db ]
 
   identity {
-    type = "SystemAssigned"
+    type = "UserAssigned"
+    identity_ids = [ azurerm_user_assigned_identity.uai.id ]
   }
+  
 
   site_config {
     dotnet_framework_version = "v5.0"
@@ -225,8 +250,10 @@ resource "azurerm_app_service" "Admin" {
 
 
   identity {
-    type = "SystemAssigned"
+    type = "UserAssigned"
+    identity_ids = [ azurerm_user_assigned_identity.uai.id ]
   }
+  
   app_settings = {
     APPINSIGHTS_INSTRUMENTATIONKEY = azurerm_application_insights.adminInsights.instrumentation_key
     APPLICATIONINSIGHTS_CONNECTION_STRING = azurerm_application_insights.adminInsights.connection_string
@@ -279,6 +306,8 @@ resource "azurerm_postgresql_server" "dbserver" {
 }
 
 
+
+
 #############################################################################
 # Add the database on the Server
 #############################################################################
@@ -288,4 +317,105 @@ resource "azurerm_postgresql_database" "db" {
   server_name         = azurerm_postgresql_server.dbserver.name
   charset             = "UTF8"
   collation           = "English_United States.1252"
+}
+
+
+# resource "azurerm_role_assignment" "uai_sql" {
+#   scope                = azurerm_postgresql_database.db.id
+#   role_definition_name = "Contributor"
+#   principal_id         = azurerm_user_assigned_identity.uai.id
+# }
+
+
+
+#############################################################################
+# Get the DNS Zone record
+#############################################################################
+data "azurerm_resource_group" "dnszonerg" {
+  name = var.dnszonergname
+}
+
+data "azurerm_dns_zone" "dnszone" {
+  name                = var.dnszonename
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+}
+
+
+#############################################################################
+# create the CNAME record for each app service
+#############################################################################
+resource "azurerm_dns_cname_record" "connectui_DNS" {
+  name                = "${var.basename}-connect"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+  record              = azurerm_app_service.connectUI.default_site_hostname
+}
+
+resource "azurerm_dns_txt_record" "connectui_txt" {
+  name                = "asuid.${var.basename}-connect"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+
+  record {
+    value = azurerm_app_service.connectUI.custom_domain_verification_id
+  }
+}
+
+resource "azurerm_dns_cname_record" "coreapi_DNS" {
+  name                = "${var.basename}-coreapi"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+  record              = azurerm_app_service.API.default_site_hostname
+}
+
+resource "azurerm_dns_txt_record" "coreapi_txt" {
+  name                = "asuid.${var.basename}-coreapi"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+
+  record {
+    value = azurerm_app_service.API.custom_domain_verification_id
+  }
+}
+resource "azurerm_dns_cname_record" "identity_DNS" {
+  name                = "${var.basename}-identity"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+  record              = azurerm_app_service.Identity.default_site_hostname
+}
+
+resource "azurerm_dns_txt_record" "identity_txt" {
+  name                = "asuid.${var.basename}-identity"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+
+  record {
+    value = azurerm_app_service.Identity.custom_domain_verification_id
+  }
+}
+
+
+resource "azurerm_dns_cname_record" "admin_DNS" {
+  name                = "${var.basename}-pathway"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+  record              = azurerm_app_service.Admin.default_site_hostname  
+}
+
+resource "azurerm_dns_txt_record" "admin_txt" {
+  name                = "asuid.${var.basename}-pathway"
+  zone_name           = data.azurerm_dns_zone.dnszone.name
+  resource_group_name = data.azurerm_resource_group.dnszonerg.name
+  ttl                 = 300
+
+  record {
+    value = azurerm_app_service.Admin.custom_domain_verification_id
+  }
 }
