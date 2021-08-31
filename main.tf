@@ -46,6 +46,7 @@ resource "azurerm_user_assigned_identity" "uai" {
 # Azure Key vault creation
 #############################################################################
 
+
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "akv" {
@@ -77,12 +78,6 @@ resource "azurerm_key_vault" "akv" {
   }
 }
 
-# resource "azurerm_role_assignment" "uai_akv" {
-#   scope                = azurerm_key_vault.akv.id
-#   role_definition_name = "Reader"
-#   principal_id         = azurerm_user_assigned_identity.uai.id
-# }
-
 #############################################################################
 # Diagnostic Storage Account
 #############################################################################
@@ -95,6 +90,7 @@ resource "azurerm_storage_account" "diagstorage" {
 
   tags = var.tags
 }
+
 
 #############################################################################
 # Create the App Service Plan

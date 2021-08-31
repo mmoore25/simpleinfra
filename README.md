@@ -10,7 +10,7 @@ Terraform and AZ CLI are required
 2. Terraform init
 3. Az login ( contributor credentials )
 4. Modify either staging.tfvars or production.tfvars 
-5. ./standup.sh  staging                  # use the name of the previously modified tfvars files
+5. ./standup.sh  sample                  # use the name of the previously modified tfvars files
 
 
 # to destroy those resources 
