@@ -76,15 +76,15 @@ variable "dbname" {
   type = string
 }
 
-variable "dnszonename" {
-  type = string  
-  default = "springerspaniel34rt.net"
-}
+# variable "dnszonename" {
+#   type = string  
+#   default = "springerspaniel34rt.net"
+# }
 
-variable "dnszonergname" {
-  type = string
-  default = "dns-rg"
-}
+# variable "dnszonergname" {
+#   type = string
+#   default = "dns-rg"
+# }
 
 variable "tier"{
   type = string
