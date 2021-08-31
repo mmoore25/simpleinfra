@@ -173,11 +173,11 @@ resource "azurerm_app_service" "API" {
 
   connection_string {
     name  = "Database"
-    type  = "SQLServer"
-    value = "Server=some-server.mydomain.com;Integrated Security=SSPI"
+    type  = "PostgreSQL"
+    value = "Database=${var.dbname}; Port=5432; Data Source=${azurerm_postgresql_server.dbserver.fqdn}; User Id=${var.administrator_login}@${azurerm_postgresql_server.dbserver.name}; Password=${var.administrator_login_password}"
   }  
   
-  tags = var.tags
+  tags = var.tags      
 } 
 
 resource "azurerm_application_insights" "apiInsights" {
@@ -186,7 +186,7 @@ resource "azurerm_application_insights" "apiInsights" {
   resource_group_name = azurerm_resource_group.mainrg.name
   application_type    = "web"
   
-  tags = var.tags
+  tags = var.tags  
 }
 
 
@@ -219,9 +219,9 @@ resource "azurerm_app_service" "Identity" {
 
   connection_string {
     name  = "Database"
-    type  = "SQLServer"
-    value = "Server=some-server.mydomain.com;Integrated Security=SSPI"
-  }
+    type  = "PostgreSQL"
+    value = "Database=${var.dbname}; Port=5432; Data Source=${azurerm_postgresql_server.dbserver.fqdn}; User Id=${var.administrator_login}@${azurerm_postgresql_server.dbserver.name}; Password=${var.administrator_login_password}"
+  } 
   
   tags = var.tags
 } 
@@ -261,9 +261,9 @@ resource "azurerm_app_service" "Admin" {
 
   connection_string {
     name  = "Database"
-    type  = "SQLServer"
-    value = "Server=some-server.mydomain.com;Integrated Security=SSPI"
-  }  
+    type  = "PostgreSQL"
+    value = "Database=${var.dbname}; Port=5432; Data Source=${azurerm_postgresql_server.dbserver.fqdn}; User Id=${var.administrator_login}@${azurerm_postgresql_server.dbserver.name}; Password=${var.administrator_login_password}"
+  }   
   
   tags = var.tags
 } 
@@ -320,102 +320,101 @@ resource "azurerm_postgresql_database" "db" {
 }
 
 
-# resource "azurerm_role_assignment" "uai_sql" {
-#   scope                = azurerm_postgresql_database.db.id
-#   role_definition_name = "Contributor"
-#   principal_id         = azurerm_user_assigned_identity.uai.id
-# }
-
-
 
 #############################################################################
 # Get the DNS Zone record
 #############################################################################
-data "azurerm_resource_group" "dnszonerg" {
-  name = var.dnszonergname
-}
 
-data "azurerm_dns_zone" "dnszone" {
-  name                = var.dnszonename
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-}
+# commented out until Azure bug for Custom Domain binding App Service can be resolved
+
+# data "azurerm_resource_group" "dnszonerg" {
+#   name = var.dnszonergname
+# }
+
+# data "azurerm_dns_zone" "dnszone" {
+#   name                = var.dnszonename
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+# }
 
 
 #############################################################################
 # create the CNAME record for each app service
 #############################################################################
-resource "azurerm_dns_cname_record" "connectui_DNS" {
-  name                = "${var.basename}-connect"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
-  record              = azurerm_app_service.connectUI.default_site_hostname
-}
 
-resource "azurerm_dns_txt_record" "connectui_txt" {
-  name                = "asuid.${var.basename}-connect"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
+# commented out until Azure bug for Custom Domain binding App Service can be resolved
 
-  record {
-    value = azurerm_app_service.connectUI.custom_domain_verification_id
-  }
-}
+# resource "azurerm_dns_cname_record" "connectui_DNS" {
+#   name                = "${var.basename}-connect"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
+#   record              = azurerm_app_service.connectUI.default_site_hostname
+# }
 
-resource "azurerm_dns_cname_record" "coreapi_DNS" {
-  name                = "${var.basename}-coreapi"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
-  record              = azurerm_app_service.API.default_site_hostname
-}
+# resource "azurerm_dns_txt_record" "connectui_txt" {
+#   name                = "asuid.${var.basename}-connect"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
 
-resource "azurerm_dns_txt_record" "coreapi_txt" {
-  name                = "asuid.${var.basename}-coreapi"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
+#   record {
+#     value = azurerm_app_service.connectUI.custom_domain_verification_id
+#   }
+# }
 
-  record {
-    value = azurerm_app_service.API.custom_domain_verification_id
-  }
-}
-resource "azurerm_dns_cname_record" "identity_DNS" {
-  name                = "${var.basename}-identity"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
-  record              = azurerm_app_service.Identity.default_site_hostname
-}
+# resource "azurerm_dns_cname_record" "coreapi_DNS" {
+#   name                = "${var.basename}-coreapi"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
+#   record              = azurerm_app_service.API.default_site_hostname
+# }
 
-resource "azurerm_dns_txt_record" "identity_txt" {
-  name                = "asuid.${var.basename}-identity"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
+# resource "azurerm_dns_txt_record" "coreapi_txt" {
+#   name                = "asuid.${var.basename}-coreapi"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
 
-  record {
-    value = azurerm_app_service.Identity.custom_domain_verification_id
-  }
-}
+#   record {
+#     value = azurerm_app_service.API.custom_domain_verification_id
+#   }
+# }
+# resource "azurerm_dns_cname_record" "identity_DNS" {
+#   name                = "${var.basename}-identity"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
+#   record              = azurerm_app_service.Identity.default_site_hostname
+# }
+
+# resource "azurerm_dns_txt_record" "identity_txt" {
+#   name                = "asuid.${var.basename}-identity"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
+
+#   record {
+#     value = azurerm_app_service.Identity.custom_domain_verification_id
+#   }
+# }
 
 
-resource "azurerm_dns_cname_record" "admin_DNS" {
-  name                = "${var.basename}-pathway"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
-  record              = azurerm_app_service.Admin.default_site_hostname  
-}
+# resource "azurerm_dns_cname_record" "admin_DNS" {
+#   name                = "${var.basename}-pathway"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
+#   record              = azurerm_app_service.Admin.default_site_hostname  
+# }
 
-resource "azurerm_dns_txt_record" "admin_txt" {
-  name                = "asuid.${var.basename}-pathway"
-  zone_name           = data.azurerm_dns_zone.dnszone.name
-  resource_group_name = data.azurerm_resource_group.dnszonerg.name
-  ttl                 = 300
+# resource "azurerm_dns_txt_record" "admin_txt" {
+#   name                = "asuid.${var.basename}-pathway"
+#   zone_name           = data.azurerm_dns_zone.dnszone.name
+#   resource_group_name = data.azurerm_resource_group.dnszonerg.name
+#   ttl                 = 300
 
-  record {
-    value = azurerm_app_service.Admin.custom_domain_verification_id
-  }
-}
+#   record {
+#     value = azurerm_app_service.Admin.custom_domain_verification_id
+#   }
+# }
