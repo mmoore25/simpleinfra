@@ -1,7 +1,7 @@
 ################### BASE INPUTS ##################
 location                    = "East US"               # All instances location
-basename                    = "sample001"                # basename that the all services instance and components will be derived from
-tags                        = { SupportGroup = "mmoore25@gmail.com", Environment = "Development" }
+basename                    = "sample01"                # basename that the all services instance and components will be derived from
+tags                        = { SupportGroup = "mmoore25@gmail.com", Environment = "Development"}
 
 
 
@@ -65,3 +65,9 @@ adminwebappname              = "APP-springpath-pathway"
 #############################################################################
 storageaccountname           = "astspringpath"
 storageaccounttier           = "Standard"
+
+#############################################################################
+# DNS Zone  VARIABLES
+#############################################################################
+dnszonename   = "springerspaniel34rt.net"   # This value has to be set
+dnszonergname = "dns-rg"                    # This value has to be set
