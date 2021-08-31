@@ -69,5 +69,5 @@ storageaccounttier           = "Standard"
 #############################################################################
 # DNS Zone  VARIABLES
 #############################################################################
-dnszonename   = "springerspaniel34rt.net"   # This value has to be set
-dnszonergname = "dns-rg"                    # This value has to be set
+# dnszonename   = "springerspaniel34rt.net"   # This value has to be set
+# dnszonergname = "dns-rg"                    # This value has to be set
